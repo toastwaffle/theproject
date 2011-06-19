@@ -8,8 +8,8 @@ class Base:
     def destroy(self, widget, data=None):
         gtk.main_quit()
 
-    def btnPushEvent():
-        gtk.main_quit()
+    def btnPushEvent(self, widget):
+        print "Hello World!"
 
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
