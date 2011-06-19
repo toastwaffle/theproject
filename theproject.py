@@ -8,6 +8,9 @@ class Base:
     def destroy(self, widget, data=None):
         gtk.main_quit()
 
+    def btnPushEvent():
+        gtk.main_quit()
+
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_position(gtk.WIN_POS_CENTER)
@@ -34,7 +37,16 @@ class Base:
             print 'You didnt choose any files!'
         dialog.hide()
 
-        page1 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
+        btnPush = gtk.Button("Push")
+        btnPush.connect("clicked", self.btnPushEvent)
+        btnPush.show()
+
+        fixedLayout = gtk.Fixed()
+        fixedLayout.put(btnPush, 0, 250)
+        fixedLayout.show()
+
+        page1 = gtk.Frame()
+        page1.add(fixedLayout)
         page1.show()
         notebook.append_page(page1)
         notebook.set_tab_label_text(page1, "Git / FTP")
