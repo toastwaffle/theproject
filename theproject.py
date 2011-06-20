@@ -108,7 +108,7 @@ class Base:
         btnSwitch.show()
 
         btnSettings = gtk.Button("Settings")
-        btnSettings.connect("clicked", self.btnSwitchEvent)
+        btnSettings.connect("clicked", self.btnSettingsEvent)
         btnSettings.show()
 
         txtStatus = gtk.Entry()
