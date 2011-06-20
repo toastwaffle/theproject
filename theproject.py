@@ -36,7 +36,18 @@ class Base:
         print "btnUploadEvent entered..."
 
     def btnSwitchEvent(self, widget):
-        print "btnSwitchEvent entered..."
+        dialog = gtk.FileChooserDialog("Select Repo Folder...", None, gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        filter = gtk.FileFilter()
+        filter.set_name("All")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            print dialog.get_filename(), 'Selected'
+        elif response == gtk.RESPONSE_CANCEL:
+            print 'You didnt choose any files!'
+        dialog.hide()
 
     def btnSettingsEvent(self, widget):
         print "btnSettingsEvent entered..."
@@ -53,19 +64,6 @@ class Base:
         notebook.set_tab_pos(gtk.POS_TOP)
         notebook.show_tabs = True
         notebook.show_border = True
-
-        """dialog = gtk.FileChooserDialog("Open...", None, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-        dialog.set_default_response(gtk.RESPONSE_OK)
-        filter = gtk.FileFilter()
-        filter.set_name("All Files")
-        filter.add_pattern("*")
-        dialog.add_filter(filter)
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            print dialog.get_filename(), 'Selected'
-        elif response == gtk.RESPONSE_CANCEL:
-            print 'You didnt choose any files!'
-        dialog.hide()"""
 
         btnPush = gtk.Button("Push")
         btnPush.connect("clicked", self.btnPushEvent)
@@ -103,7 +101,7 @@ class Base:
         btnUpload.connect("clicked", self.btnUploadEvent)
         btnUpload.show()
 
-        btnSwitch = gtk.Button("Switch...")
+        btnSwitch = gtk.Button("Switch Repo...")
         btnSwitch.connect("clicked", self.btnSwitchEvent)
         btnSwitch.show()
 
