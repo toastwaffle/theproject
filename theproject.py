@@ -3,6 +3,13 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+import os
+import sys
+sys.path.append(os.getcwd())
+import smmap
+import async
+import gitdb
+import git
 
 class Base:
     def destroy(self, widget, data=None):
@@ -44,9 +51,18 @@ class Base:
         dialog.add_filter(filter)
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
-            print dialog.get_filename(), 'Selected'
+            repos = dialog.get_filename()
+            if os.path.exists(repos+'/.git'):
+                Repo = git.repo.Repo(repos)
+                #print Repo
+                #print 'Repo initialised at ', repos
+            else:
+                Repo = git.repo.Repo(repos,bare=True)
+                #print Repo
+                #print 'Repo initialised at ', repos
+            print repos, 'Selected'
         elif response == gtk.RESPONSE_CANCEL:
-            print 'You didnt choose any files!'
+            print 'No folder selected, repository not changed'
         dialog.hide()
 
     def btnSettingsEvent(self, widget):
