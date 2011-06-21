@@ -10,6 +10,7 @@ import smmap
 import async
 import gitdb
 import git
+import filelist
 
 class Base:
     def destroy(self, widget, data=None):
@@ -60,6 +61,8 @@ class Base:
                 Repo = git.repo.Repo(repos,bare=True)
                 #print Repo
                 #print 'Repo initialised at ', repos
+	    new_model = filelist.FileListModel(repos,True)
+            self.trvFileSystem.set_model(new_model)
             print repos, 'Selected'
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected, repository not changed'
@@ -76,92 +79,101 @@ class Base:
         self.window.show()
         self.window.connect("destroy", self.destroy)      
 
-        notebook = gtk.Notebook()
-        notebook.set_tab_pos(gtk.POS_TOP)
-        notebook.show_tabs = True
-        notebook.show_border = True
+        self.notebook = gtk.Notebook()
+        self.notebook.set_tab_pos(gtk.POS_TOP)
+        self.notebook.show_tabs = True
+        self.notebook.show_border = True
 
-        btnPush = gtk.Button("Push")
-        btnPush.connect("clicked", self.btnPushEvent)
-        btnPush.show()
+        self.btnPush = gtk.Button("Push")
+        self.btnPush.connect("clicked", self.btnPushEvent)
+        self.btnPush.show()
 
-        btnPull = gtk.Button("Pull")
-        btnPull.connect("clicked", self.btnPullEvent)
-        btnPull.show()
+        self.btnPull = gtk.Button("Pull")
+        self.btnPull.connect("clicked", self.btnPullEvent)
+        self.btnPull.show()
 
-        btnAdd = gtk.Button("Add")
-        btnAdd.connect("clicked", self.btnAddEvent)
-        btnAdd.show()
+        self.btnAdd = gtk.Button("Add")
+        self.btnAdd.connect("clicked", self.btnAddEvent)
+        self.btnAdd.show()
 
-        btnCommit = gtk.Button("Commit")
-        btnCommit.connect("clicked", self.btnCommitEvent)
-        btnCommit.show()
+        self.btnCommit = gtk.Button("Commit")
+        self.btnCommit.connect("clicked", self.btnCommitEvent)
+        self.btnCommit.show()
 
-        btnTrack = gtk.Button("Track")
-        btnTrack.connect("clicked", self.btnTrackEvent)
-        btnTrack.show()
+        self.btnTrack = gtk.Button("Track")
+        self.btnTrack.connect("clicked", self.btnTrackEvent)
+        self.btnTrack.show()
 
-        btnOpen = gtk.Button("Open")
-        btnOpen.connect("clicked", self.btnOpenEvent)
-        btnOpen.show()
+        self.btnOpen = gtk.Button("Open")
+        self.btnOpen.connect("clicked", self.btnOpenEvent)
+        self.btnOpen.show()
 
-        btnIgnore = gtk.Button("Ignore")
-        btnIgnore.connect("clicked", self.btnIgnoreEvent)
-        btnIgnore.show()
+        self.btnIgnore = gtk.Button("Ignore")
+        self.btnIgnore.connect("clicked", self.btnIgnoreEvent)
+        self.btnIgnore.show()
 
-        btnBranch = gtk.Button("Branch...")
-        btnBranch.connect("clicked", self.btnBranchEvent)
-        btnBranch.show()
+        self.btnBranch = gtk.Button("Branch...")
+        self.btnBranch.connect("clicked", self.btnBranchEvent)
+        self.btnBranch.show()
 
-        btnUpload = gtk.Button("Upload")
-        btnUpload.connect("clicked", self.btnUploadEvent)
-        btnUpload.show()
+        self.btnUpload = gtk.Button("Upload")
+        self.btnUpload.connect("clicked", self.btnUploadEvent)
+        self.btnUpload.show()
 
-        btnSwitch = gtk.Button("Switch Repo...")
-        btnSwitch.connect("clicked", self.btnSwitchEvent)
-        btnSwitch.show()
+        self.btnSwitch = gtk.Button("Switch Repo...")
+        self.btnSwitch.connect("clicked", self.btnSwitchEvent)
+        self.btnSwitch.show()
 
-        btnSettings = gtk.Button("Settings")
-        btnSettings.connect("clicked", self.btnSettingsEvent)
-        btnSettings.show()
+        self.btnSettings = gtk.Button("Settings")
+        self.btnSettings.connect("clicked", self.btnSettingsEvent)
+        self.btnSettings.show()
 
-        txtStatus = gtk.Entry()
-        txtStatus.show()
+        self.txtStatus = gtk.Label("")
+        self.txtStatus.show()
 
-        fixedLayout = gtk.Fixed()
-        fixedLayout.put(btnPush, 0, 250)
-        fixedLayout.put(btnPull, 0, 280)
-        fixedLayout.put(btnAdd, 0, 310)
-        fixedLayout.put(btnCommit, 20, 0)
-        fixedLayout.put(btnTrack, 20, 30)
-        fixedLayout.put(btnOpen, 20, 60)
-        fixedLayout.put(btnIgnore, 20, 90)
-        fixedLayout.put(btnBranch, 20, 110)
-        fixedLayout.put(btnUpload, 20, 200)
-        fixedLayout.put(btnSwitch, 50, 0)
-        fixedLayout.put(btnSettings, 100, 0)
-        fixedLayout.put(txtStatus, 100, 25)
+        self.instFileSystemInstance = filelist.FileList(os.path.expanduser('~'))
+        self.trvFileSystem = self.instFileSystemInstance.treeview
+        self.trvFileSystem.show()
 
-        fixedLayout.show()
+	self.scrFileListPane = gtk.ScrolledWindow()
+        self.scrFileListPane.add(self.trvFileSystem)
+        self.scrFileListPane.show()
 
-        page1 = gtk.Frame()
-        page1.add(fixedLayout)
-        page1.show()
-        notebook.append_page(page1)
-        notebook.set_tab_label_text(page1, "Git / FTP")
+        self.fixedLayout = gtk.Fixed()
+        self.fixedLayout.put(self.scrFileListPane, 0, 0)
+        self.fixedLayout.put(self.btnPush, 0, 250)
+        self.fixedLayout.put(self.btnPull, 0, 280)
+        self.fixedLayout.put(self.btnAdd, 0, 310)
+        self.fixedLayout.put(self.btnCommit, 20, 0)
+        self.fixedLayout.put(self.btnTrack, 20, 30)
+        self.fixedLayout.put(self.btnOpen, 20, 60)
+        self.fixedLayout.put(self.btnIgnore, 20, 90)
+        self.fixedLayout.put(self.btnBranch, 20, 110)
+        self.fixedLayout.put(self.btnUpload, 20, 200)
+        self.fixedLayout.put(self.btnSwitch, 50, 0)
+        self.fixedLayout.put(self.btnSettings, 100, 0)
+        self.fixedLayout.put(self.txtStatus, 100, 25)
 
-        page2 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
-        page2.show()
-        notebook.append_page(page2)
-        notebook.set_tab_label_text(page2, "Auto Installs")
+        self.fixedLayout.show()
 
-        page3 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
-        page3.show()
-        notebook.append_page(page3)
-        notebook.set_tab_label_text(page3, "Downloader")
+        self.page1 = gtk.Frame()
+        self.page1.add(self.fixedLayout)
+        self.page1.show()
+        self.notebook.append_page(self.page1)
+        self.notebook.set_tab_label_text(self.page1, "Git / FTP")
 
-        notebook.show()
-        self.window.add(notebook)
+        self.page2 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
+        self.page2.show()
+        self.notebook.append_page(self.page2)
+        self.notebook.set_tab_label_text(self.page2, "Auto Installs")
+
+        self.page3 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
+        self.page3.show()
+        self.notebook.append_page(self.page3)
+        self.notebook.set_tab_label_text(self.page3, "Downloader")
+
+        self.notebook.show()
+        self.window.add(self.notebook)
 
     def main(self):
         gtk.main()
