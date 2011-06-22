@@ -60,13 +60,26 @@ class FileListModel(gtk.GenericTreeModel):
             self.dirname = os.path.expanduser('~')
         else:
             self.dirname = os.path.abspath(dname)
-        self.files = [f for f in os.listdir(self.dirname) if f[0] <> '.']
-        self.files.sort()
+        self.dirsfiles = [f for f in os.listdir(self.dirname) if f[0] <> '.']
+        self.dirsfiles.sort(key=str.lower)
+        self.files = []
+        self.dirs = []
+        for x in self.dirsfiles:
+            fname = os.path.join(self.dirname, x)
+            try:
+                filestat = os.stat(fname)
+            except OSError:
+                return None
+            mode = filestat.st_mode
+            if stat.S_ISDIR(mode):
+                self.dirs.append(x)
+            else:
+                self.files.append(x)
         if root:
-            self.files = self.files
+            self.files = self.dirs + self.files
             self.rootpath = self.dirname
 	else:
-            self.files = ['..'] + self.files
+            self.files = ['..'] + self.dirs + self.files
             self.rootpath = rootpath
         return
 
