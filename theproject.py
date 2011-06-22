@@ -71,6 +71,12 @@ class Base:
     def btnSettingsEvent(self, widget):
         print "btnSettingsEvent entered..."
 
+    def btnSettings2Event(self, widget):
+        print "btnSettings2Event entered..."
+
+    def btnDownloadEvent(self, widget):
+        print "btnDownloadEvent entered..."
+
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_position(gtk.WIN_POS_CENTER)
@@ -128,8 +134,15 @@ class Base:
         self.btnSettings.connect("clicked", self.btnSettingsEvent)
         self.btnSettings.show()
 
-        self.txtStatus = gtk.Label("")
+        self.txtStatus = gtk.Label(" { Status/Message Box } ")
         self.txtStatus.show()
+
+        self.btnSettings2 = gtk.Button("Settings")
+        self.btnSettings2.connect("clicked", self.btnSettings2Event)
+        self.btnSettings2.show()
+
+        self.txtStatus2 = gtk.Label(" { Status/Message Box } ")
+        self.txtStatus2.show()
 
         self.instFileSystemInstance = filelist.FileList(os.path.expanduser('~'))
         self.trvFileSystem = self.instFileSystemInstance.treeview
@@ -138,6 +151,19 @@ class Base:
 	self.scrFileListPane = gtk.ScrolledWindow()
         self.scrFileListPane.add(self.trvFileSystem)
         self.scrFileListPane.show()
+
+        self.prgbDownload = gtk.ProgressBar(adjustment=None)
+        self.prgbDownload.show()
+
+        self.edtDownloadLocation = gtk.Entry()
+        self.edtDownloadLocation.show()
+
+        self.lblDownloadLocation = gtk.Label("Download location: ")
+        self.lblDownloadLocation.show()
+
+        self.btnDownload = gtk.Button("Download")
+        self.btnDownload.connect("clicked", self.btnDownloadEvent)
+        self.btnDownload.show()
 
         vbox = gtk.VBox(False, 3)
 
@@ -170,12 +196,26 @@ class Base:
         self.notebook.append_page(self.page1)
         self.notebook.set_tab_label_text(self.page1, "Git / FTP")
 
-        self.page2 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
+        self.page2 = gtk.Label("{ To be replaced... }");
         self.page2.show()
         self.notebook.append_page(self.page2)
         self.notebook.set_tab_label_text(self.page2, "Auto Installs")
 
-        self.page3 = gtk.Label("This is gonna be replaced by content...\n...Soon...\n...Hopefully...;)")
+        table3 = gtk.Table(1, 2, False)
+        table3.attach(self.btnSettings2, 0, 1, 0, 1)
+        table3.attach(self.txtStatus2, 1, 2, 0, 1)
+        table3.show()
+
+        vbox3 = gtk.VBox(False, 3)
+        vbox3.pack_start(self.lblDownloadLocation, True, False, 0)
+        vbox3.pack_start(self.edtDownloadLocation, True, False, 0)
+        vbox3.pack_start(self.btnDownload, True, False, 0)
+        vbox3.pack_start(self.prgbDownload, True, False, 0)
+        vbox3.pack_end(table3, True, False, 0)
+        vbox3.show()
+
+        self.page3 = gtk.Frame()
+        self.page3.add(vbox3)
         self.page3.show()
         self.notebook.append_page(self.page3)
         self.notebook.set_tab_label_text(self.page3, "Downloader")
