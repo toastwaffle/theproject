@@ -184,10 +184,5 @@ class FileList:
                 new_model = FileListModel(pathname,True)
             else:
                 new_model = FileListModel(pathname,False,model.rootpath)
-            self.window.set_title(new_model.dirname)
             treeview.set_model(new_model)
         return
-
-    '''def switch_repo(self, path):
-	new_model = FileListModel(path,True)
-        self.treeview.set_model(model)'''
