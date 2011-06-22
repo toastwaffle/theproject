@@ -11,6 +11,7 @@ import async
 import gitdb
 import git
 import filelist
+import urllib2
 
 class Base:
     def destroy(self, widget, data=None):
@@ -145,6 +146,7 @@ class Base:
         self.txtStatus2.show()
 
         self.instFileSystemInstance = filelist.FileList(os.path.expanduser('~'))
+        self.instFileSystemInstance.treeview.columns_autosize()
         self.trvFileSystem = self.instFileSystemInstance.treeview
         self.trvFileSystem.show()
 
@@ -164,6 +166,9 @@ class Base:
         self.btnDownload = gtk.Button("Download")
         self.btnDownload.connect("clicked", self.btnDownloadEvent)
         self.btnDownload.show()
+
+        self.cboInstallPresets = gtk.ComboBox()
+        self.cboInstallPresets.show()
 
         vbox = gtk.VBox(False, 3)
 
@@ -185,7 +190,7 @@ class Base:
         table2.attach(self.txtStatus, 1, 2, 0, 1)
         table2.show()
 
-        vbox.pack_start(self.scrFileListPane, True, False, 0)
+        vbox.pack_start(self.scrFileListPane, True, True, 0)
         vbox.pack_end(table2, True, False, 0)
         vbox.pack_end(table, True, False, 0)
         vbox.show()
@@ -196,7 +201,8 @@ class Base:
         self.notebook.append_page(self.page1)
         self.notebook.set_tab_label_text(self.page1, "Git / FTP")
 
-        self.page2 = gtk.Label("{ To be replaced... }");
+        self.page2 = gtk.Frame()
+        self.page2.add(self.cboInstallPresets)
         self.page2.show()
         self.notebook.append_page(self.page2)
         self.notebook.set_tab_label_text(self.page2, "Auto Installs")
