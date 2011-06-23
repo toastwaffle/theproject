@@ -161,7 +161,8 @@ class FileListModel(gtk.GenericTreeModel):
         return None
 
 class FileList:
-    def __init__(self,dirname):
+    def __init__(self,dirname,globalclass):
+        self.globalclass = globalclass
         self.listmodel = FileListModel(dirname,True)
  
         # create the TreeView
@@ -193,9 +194,14 @@ class FileList:
         model = treeview.get_model()
         if model.is_folder(path):
             pathname = model.get_pathname(path)
+            if os.path.exists(pathname+'/.git'):
+                self.globalclass.btnInit.set_sensitive(False)
+            else:
+                self.globalclass.btnInit.set_sensitive(True)                
             if os.path.abspath(pathname) == os.path.abspath(model.rootpath):
                 new_model = FileListModel(pathname,True)
             else:
                 new_model = FileListModel(pathname,False,model.rootpath)
             treeview.set_model(new_model)
+            self.globalclass.window.set_title("TheProject - " + os.path.abspath(pathname))
         return

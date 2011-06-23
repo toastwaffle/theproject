@@ -14,6 +14,27 @@ import filelist
 import urllib2
 
 class Base:
+    def git_active(self):
+        self.btnPull.set_sensitive(True)
+        self.btnPush.set_sensitive(True)
+        self.btnAdd.set_sensitive(True)
+        self.btnCommit.set_sensitive(True)
+        self.btnTrack.set_sensitive(True)
+        self.btnIgnore.set_sensitive(True)
+        self.btnBranch.set_sensitive(True)
+        self.btnInit.set_sensitive(False)
+        self.btnGitSetup.hide()
+        if self.btnFtpSetup.get_visible():
+            self.table.remove(self.btnFtpSetup)
+            self.table.attach(self.btnFtpSetup, 0, 4, 3, 4)
+            
+
+    def ftp_active(self):
+        self.btnUpload.set_sensitive(True)
+        self.btnFtpSetup.hide()
+        if self.btnGitSetup.get_visible:
+            self.table.attach(self.btnGitSetup, 0, 4, 3, 4)
+        
     def destroy(self, widget, data=None):
         gtk.main_quit()
 
@@ -56,18 +77,31 @@ class Base:
             repos = dialog.get_filename()
             if os.path.exists(repos+'/.git'):
                 Repo = git.repo.Repo(repos)
-                #print Repo
-                #print 'Repo initialised at ', repos
+                self.txtStatus.set_text('Using Repo at:\n' + repos)
+                self.window.set_title("TheProject - " + repos)
             else:
                 Repo = git.repo.Repo(repos,bare=True)
-                #print Repo
-                #print 'Repo initialised at ', repos
+                self.txtStatus.set_text('Initialised Repo at:\n' + repos)
+                self.window.set_title("TheProject - " + repos)
 	    new_model = filelist.FileListModel(repos,True)
             self.trvFileSystem.set_model(new_model)
             print repos, 'Selected'
+            self.git_active()
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected, repository not changed'
         dialog.hide()
+
+    def btnCloneEvent(self, widget):
+        print "btnCloneEvent entered..."
+
+    def btnInitEvent(self, widget):
+        print "btnInitEvent entered..."
+
+    def btnGitSetupEvent(self, widget):
+        print "btnGitSetupEvent entered..."
+
+    def btnFtpSetupEvent(self, widget):
+        print "btnFtpSetupEvent entered..."
 
     def btnSettingsEvent(self, widget):
         print "btnSettingsEvent entered..."
@@ -93,22 +127,27 @@ class Base:
 
         self.btnPush = gtk.Button("Push")
         self.btnPush.connect("clicked", self.btnPushEvent)
+        self.btnPush.set_sensitive(False)
         self.btnPush.show()
 
         self.btnPull = gtk.Button("Pull")
         self.btnPull.connect("clicked", self.btnPullEvent)
+        self.btnPull.set_sensitive(False)
         self.btnPull.show()
 
         self.btnAdd = gtk.Button("Add")
         self.btnAdd.connect("clicked", self.btnAddEvent)
+        self.btnAdd.set_sensitive(False)
         self.btnAdd.show()
 
         self.btnCommit = gtk.Button("Commit")
         self.btnCommit.connect("clicked", self.btnCommitEvent)
+        self.btnCommit.set_sensitive(False)
         self.btnCommit.show()
 
         self.btnTrack = gtk.Button("Track")
         self.btnTrack.connect("clicked", self.btnTrackEvent)
+        self.btnTrack.set_sensitive(False)
         self.btnTrack.show()
 
         self.btnOpen = gtk.Button("Open")
@@ -117,19 +156,38 @@ class Base:
 
         self.btnIgnore = gtk.Button("Ignore")
         self.btnIgnore.connect("clicked", self.btnIgnoreEvent)
+        self.btnIgnore.set_sensitive(False)
         self.btnIgnore.show()
 
         self.btnBranch = gtk.Button("Branch")
         self.btnBranch.connect("clicked", self.btnBranchEvent)
+        self.btnBranch.set_sensitive(False)
         self.btnBranch.show()
 
         self.btnUpload = gtk.Button("Upload")
         self.btnUpload.connect("clicked", self.btnUploadEvent)
+        self.btnUpload.set_sensitive(False)
         self.btnUpload.show()
 
         self.btnSwitch = gtk.Button("Switch")
         self.btnSwitch.connect("clicked", self.btnSwitchEvent)
         self.btnSwitch.show()
+
+        self.btnClone = gtk.Button("Clone")
+        self.btnClone.connect("clicked", self.btnCloneEvent)
+        self.btnClone.show()
+
+        self.btnGitSetup = gtk.Button("Setup Git")
+        self.btnGitSetup.connect("clicked", self.btnGitSetupEvent)
+        self.btnGitSetup.show()
+
+        self.btnFtpSetup = gtk.Button("Setup FTP")
+        self.btnFtpSetup.connect("clicked", self.btnFtpSetupEvent)
+        self.btnFtpSetup.show()
+
+        self.btnInit = gtk.Button("Init")
+        self.btnInit.connect("clicked", self.btnInitEvent)
+        self.btnInit.show()
 
         self.btnSettings = gtk.Button("Settings")
         self.btnSettings.connect("clicked", self.btnSettingsEvent)
@@ -145,7 +203,7 @@ class Base:
         self.txtStatus2 = gtk.Label(" { Status/Message Box } ")
         self.txtStatus2.show()
 
-        self.instFileSystemInstance = filelist.FileList(os.path.expanduser('~'))
+        self.instFileSystemInstance = filelist.FileList(os.path.expanduser('~'),self)
         self.instFileSystemInstance.treeview.columns_autosize()
         self.trvFileSystem = self.instFileSystemInstance.treeview
         self.trvFileSystem.show()
@@ -170,33 +228,37 @@ class Base:
         self.cboInstallPresets = gtk.ComboBox()
         self.cboInstallPresets.show()
 
-        vbox = gtk.VBox(False, 3)
+        self.vbox = gtk.VBox(False, 3)
 
-        table = gtk.Table(4, 4, True)
-        table.attach(self.btnPull, 0, 1, 0, 1)
-        table.attach(self.btnPush, 1, 2, 0, 1)
-        table.attach(self.btnAdd, 2, 3, 0 ,1)
-        table.attach(self.btnCommit, 3, 4, 0, 1)
-        table.attach(self.btnTrack, 0, 1, 1, 2)
-        table.attach(self.btnOpen, 1, 2, 1, 2)
-        table.attach(self.btnIgnore, 2, 3, 1, 2)
-        table.attach(self.btnBranch, 3, 4, 1, 2)
-        table.attach(self.btnUpload, 0, 1, 2, 3)
-        table.attach(self.btnSwitch, 1, 2, 2, 3)
-        table.show()
+        self.table = gtk.Table(4, 4, True)
+        self.table.attach(self.btnPull, 0, 1, 0, 1)
+        self.table.attach(self.btnPush, 1, 2, 0, 1)
+        self.table.attach(self.btnAdd, 2, 3, 0 ,1)
+        self.table.attach(self.btnCommit, 3, 4, 0, 1)
+        self.table.attach(self.btnTrack, 0, 1, 1, 2)
+        self.table.attach(self.btnUpload, 1, 2, 1, 2)
+        self.table.attach(self.btnIgnore, 2, 3, 1, 2)
+        self.table.attach(self.btnBranch, 3, 4, 1, 2)
+        self.table.attach(self.btnOpen, 0, 1, 2, 3)
+        self.table.attach(self.btnSwitch, 1, 2, 2, 3)
+        self.table.attach(self.btnClone, 2, 3, 2, 3)
+        self.table.attach(self.btnInit, 3, 4, 2, 3)
+        self.table.attach(self.btnGitSetup, 0, 2, 3, 4)
+        self.table.attach(self.btnFtpSetup, 2, 4, 3, 4)
+        self.table.show()
 
-        table2 = gtk.Table(1, 2, False)
-        table2.attach(self.btnSettings, 0, 1, 0, 1)
-        table2.attach(self.txtStatus, 1, 2, 0, 1)
-        table2.show()
+        self.table2 = gtk.Table(1, 2, False)
+        self.table2.attach(self.btnSettings, 0, 1, 0, 1)
+        self.table2.attach(self.txtStatus, 1, 2, 0, 1)
+        self.table2.show()
 
-        vbox.pack_start(self.scrFileListPane, True, True, 0)
-        vbox.pack_end(table2, True, False, 0)
-        vbox.pack_end(table, True, False, 0)
-        vbox.show()
+        self.vbox.pack_start(self.scrFileListPane, True, True, 0)
+        self.vbox.pack_end(self.table2, True, False, 0)
+        self.vbox.pack_end(self.table, True, False, 0)
+        self.vbox.show()
 
         self.page1 = gtk.Frame()
-        self.page1.add(vbox)
+        self.page1.add(self.vbox)
         self.page1.show()
         self.notebook.append_page(self.page1)
         self.notebook.set_tab_label_text(self.page1, "Git / FTP")
@@ -207,21 +269,21 @@ class Base:
         self.notebook.append_page(self.page2)
         self.notebook.set_tab_label_text(self.page2, "Auto Installs")
 
-        table3 = gtk.Table(1, 2, False)
-        table3.attach(self.btnSettings2, 0, 1, 0, 1)
-        table3.attach(self.txtStatus2, 1, 2, 0, 1)
-        table3.show()
+        self.table3 = gtk.Table(1, 2, False)
+        self.table3.attach(self.btnSettings2, 0, 1, 0, 1)
+        self.table3.attach(self.txtStatus2, 1, 2, 0, 1)
+        self.table3.show()
 
-        vbox3 = gtk.VBox(False, 3)
-        vbox3.pack_start(self.lblDownloadLocation, True, False, 0)
-        vbox3.pack_start(self.edtDownloadLocation, True, False, 0)
-        vbox3.pack_start(self.btnDownload, True, False, 0)
-        vbox3.pack_start(self.prgbDownload, True, False, 0)
-        vbox3.pack_end(table3, True, False, 0)
-        vbox3.show()
+        self.vbox3 = gtk.VBox(False, 3)
+        self.vbox3.pack_start(self.lblDownloadLocation, True, False, 0)
+        self.vbox3.pack_start(self.edtDownloadLocation, True, False, 0)
+        self.vbox3.pack_start(self.btnDownload, True, False, 0)
+        self.vbox3.pack_start(self.prgbDownload, True, False, 0)
+        self.vbox3.pack_end(self.table3, True, False, 0)
+        self.vbox3.show()
 
         self.page3 = gtk.Frame()
-        self.page3.add(vbox3)
+        self.page3.add(self.vbox3)
         self.page3.show()
         self.notebook.append_page(self.page3)
         self.notebook.set_tab_label_text(self.page3, "Downloader")
