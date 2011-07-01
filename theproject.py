@@ -76,11 +76,11 @@ class Base:
         if response == gtk.RESPONSE_OK:
             repos = dialog.get_filename()
             if os.path.exists(repos+'/.git'):
-                Repo = git.repo.Repo(repos)
+                self.Repo = git.repo.Repo(repos)
                 self.txtStatus.set_text('Using Repo at:\n' + repos)
                 self.window.set_title("TheProject - " + repos)
             else:
-                Repo = git.repo.Repo(repos,bare=True)
+                self.Repo = git.repo.Repo(repos,bare=True)
                 self.txtStatus.set_text('Initialised Repo at:\n' + repos)
                 self.window.set_title("TheProject - " + repos)
 	    new_model = filelist.FileListModel(repos,True)
@@ -92,7 +92,55 @@ class Base:
         dialog.hide()
 
     def btnCloneEvent(self, widget):
-        print "btnCloneEvent entered..."
+        self.edtClone = gtk.Entry()
+        self.edtClone.show()
+        self.lblClone = gtk.Label("Remote Repo to Clone")
+        self.lblClone.show()
+        self.edtLocation = gtk.Entry()
+        self.edtLocation.set_text(os.path.expanduser("~"))
+        self.edtLocation.show()
+        self.lblLocation = gtk.Label("Location to Clone to")
+        self.lblLocation.show()
+        self.btnBrowse = gtk.Button("Browse")
+        self.btnBrowse.show()
+        self.btnBrowse.connect("clicked",self.btnBrowseEvent)
+        dialog = gtk.Dialog("Clone Repo...", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        dialog.vbox.pack_start(self.lblClone)
+        dialog.vbox.pack_start(self.edtClone)
+        dialog.vbox.pack_end(self.btnBrowse)
+        dialog.vbox.pack_end(self.edtLocation)
+        dialog.vbox.pack_end(self.lblLocation)
+        result = dialog.run()
+        if result == gtk.RESPONSE_ACCEPT:
+            if not os.path.exists(self.edtLocation.get_text()):
+                os.makedirs(self.edtLocation.get_text())
+            os.chdir(self.edtLocation.get_text())
+            try:
+                self.Repo = git.Repo.clone_from(self.edtClone.get_text(),self.edtLocation.get_text())
+                dialog.hide()
+                print 'Repo Cloned to ',self.edtLocation.get_text()
+                self.txtStatus.set_text('Initialised Repo at:\n' + self.edtLocation.get_text())
+                self.git_active()
+            except GitCommandError:
+                print 'Couldn\'t Clone Repo, Repo or path invalid'
+                dialog.run()
+        else:
+            dialog.hide()
+        
+    def btnBrowseEvent(self, widget):
+        dialog = gtk.FileChooserDialog("Select Folder to clone to...", None, gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        filter = gtk.FileFilter()
+        filter.set_name("All")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            self.edtLocation.set_text(dialog.get_filename())
+            print 'Location changed to ', dialog.get_filename()
+        elif response == gtk.RESPONSE_CANCEL:
+            print 'No folder selected, location not changed'
+        dialog.hide()
 
     def btnInitEvent(self, widget):
         print "btnInitEvent entered..."
