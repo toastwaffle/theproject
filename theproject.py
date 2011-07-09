@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#Created by toastwaffle && starcube
+#github.com/toastwaffle && github.com/starcube
+
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -158,7 +161,17 @@ class Base:
         print "btnSettings2Event entered..."
 
     def btnDownloadEvent(self, widget):
-        print "btnDownloadEvent entered..."
+        urlfile = urllib2.urlopen(self.edtDownloadLocation.get_text())
+        data_list = []
+        chunk = 4096
+        while 1:
+            data = urlfile.read(chunk)
+            if not data:
+                print "done."
+                break
+            data_list.append(data)
+            self.prgbDownload.set_text("Read %s bytes"%len(data))
+
 
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -273,7 +286,11 @@ class Base:
         self.btnDownload.connect("clicked", self.btnDownloadEvent)
         self.btnDownload.show()
 
-        self.cboInstallPresets = gtk.ComboBox()
+        self.cboInstallPresets = gtk.combo_box_new_text()
+        self.cboInstallPresets.append_text("Wordpress")
+        self.cboInstallPresets.append_text("Contao")
+        self.cboInstallPresets.append_text("Joomla")
+        self.cboInstallPresets.set_active(0)
         self.cboInstallPresets.show()
 
         self.vbox = gtk.VBox(False, 3)
