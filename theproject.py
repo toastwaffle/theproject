@@ -80,10 +80,11 @@ class Base:
                 self.txtStatus.set_text('Using Repo at:\n' + repos)
                 self.window.set_title("TheProject - " + repos)
             else:
-                self.Repo = git.repo.Repo(repos,bare=True)
+                dirname = repos + '/.git'
+                self.Repo = git.Repo.init(dirname)
                 self.txtStatus.set_text('Initialised Repo at:\n' + repos)
                 self.window.set_title("TheProject - " + repos)
-	    new_model = filelist.FileListModel(repos,True)
+            new_model = filelist.FileListModel(repos,True)
             self.trvFileSystem.set_model(new_model)
             print repos, 'Selected'
             self.git_active()
@@ -119,10 +120,13 @@ class Base:
                 self.Repo = git.Repo.clone_from(self.edtClone.get_text(),self.edtLocation.get_text())
                 dialog.hide()
                 print 'Repo Cloned to ',self.edtLocation.get_text()
-                self.txtStatus.set_text('Initialised Repo at:\n' + self.edtLocation.get_text())
+                self.txtStatus.set_text('Cloned Repo to:\n' + self.edtLocation.get_text())
                 self.git_active()
+                new_model = filelist.FileListModel(os.path.abspath(self.edtLocation.get_text()),True)
+                self.trvFileSystem.set_model(new_model)
             except GitCommandError:
                 print 'Couldn\'t Clone Repo, Repo or path invalid'
+                self.txtStatus.set_text('Repo or path invalid')
                 dialog.run()
         else:
             dialog.hide()
@@ -143,7 +147,14 @@ class Base:
         dialog.hide()
 
     def btnInitEvent(self, widget):
-        print "btnInitEvent entered..."
+        model = self.trvFileSystem.get_model()
+        dirname = model.dirname
+        self.Repo = git.Repo.init(dirname)
+        print 'Git Repo initialised at', dirname
+        self.txtStatus.set_text('Repo initialised at '+dirname)
+        self.git_active()
+        new_model = filelist.FileListModel(os.path.abspath(dirname),True)
+        self.trvFileSystem.set_model(new_model)
 
     def btnGitSetupEvent(self, widget):
         print "btnGitSetupEvent entered..."
@@ -256,7 +267,7 @@ class Base:
         self.trvFileSystem = self.instFileSystemInstance.treeview
         self.trvFileSystem.show()
 
-	self.scrFileListPane = gtk.ScrolledWindow()
+        self.scrFileListPane = gtk.ScrolledWindow()
         self.scrFileListPane.add(self.trvFileSystem)
         self.scrFileListPane.show()
 
