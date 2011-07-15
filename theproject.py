@@ -42,10 +42,50 @@ class Base:
         gtk.main_quit()
 
     def btnPushEvent(self, widget):
-        print "btnPushEvent entered..."
+        if len(self.Repo.remotes) != 0:
+            self.cboRemote = gtk.combo_box_new_text()
+            self.cboRemote.append_text("*ALL*")
+            for x in self.Repo.remotes:
+                self.cboRemote.append_text(x.name)
+            self.cboRemote.set_active(0)
+            self.cboRemote.show()
+            dialog = gtk.Dialog("Select Remote to Push to...", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+            dialog.vbox.pack_start(self.cboRemote)
+            result = dialog.run()
+            if result == gtk.RESPONSE_ACCEPT:
+                if self.cboRemote.get_active() == 0:
+                    for x in self.Repo.remotes:
+                        x.push()
+                    self.txtStatus.set_text('Pushed repo to all remotes')
+                elif self.cboRemote.get_active() > 0:
+                    self.Repo.remotes[self.cboRemote.get_active()-1].push()
+                    self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[self.cboRemote.get_active()-1].name)
+            else:
+                dialog.hide()
+        else:
+            self.repo.remotes[0].push()
+            self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[0].name)
+        
 
     def btnPullEvent(self, widget):
-        print "btnPullEvent entered..."
+        if len(self.Repo.remotes) != 0:
+            self.cboRemote = gtk.combo_box_new_text()
+            for x in self.Repo.remotes:
+                self.cboRemote.append_text(x.name)
+            self.cboRemote.set_active(0)
+            self.cboRemote.show()
+            dialog = gtk.Dialog("Select Remote to Pull From...", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+            dialog.vbox.pack_start(self.cboRemote)
+            result = dialog.run()
+            if result == gtk.RESPONSE_ACCEPT:
+                if self.cboRemote.get_active() >= 0:
+                    self.Repo.remotes[self.cboRemote.get_active()-1].push()
+                    self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[self.cboRemote.get_active()].name)
+            else:
+                dialog.hide()
+        else:
+            self.repo.remotes[0].push()
+            self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[0].name)
 
     def btnAddEvent(self, widget):
         print "btnAddEvent entered..."
