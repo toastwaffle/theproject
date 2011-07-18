@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<theproject>
+	<config>
+		<section_git>
+			<defaultprofile/>
+			<profiles/>
+		</section_git>
+		<section_ftp>
+			<defaultprofile/>
+			<profiles/>
+		</section_ftp>
+		<section_inst>
+			<defaultprofile/>
+			<configpath/>
+			<profiles/>
+		</section_inst>
+		<section_dwld>
+			<dwldlocation/>
+		</section_dwld>
+	</config>
+</theproject>
