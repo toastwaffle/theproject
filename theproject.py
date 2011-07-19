@@ -108,6 +108,7 @@ class Base:
         self.btnRemove.set_sensitive(True)
 
     def btnCommitEvent(self, widget):
+        self.Repo.index.add([diff.a_blob.name for diff in self.Repo.index.diff(None)])
         self.Repo.index.write()
         edtMessage = gtk.Entry()
         edtMessage.set_text('Commit Message')
