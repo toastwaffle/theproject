@@ -15,14 +15,14 @@ import gitdb
 import git
 import filelist
 import urllib2
+import thread
 
 class Base:
     def git_active(self):
+        self.gitisactive = True
         self.btnPull.set_sensitive(True)
         self.btnPush.set_sensitive(True)
-        self.btnAdd.set_sensitive(True)
         self.btnCommit.set_sensitive(True)
-        self.btnTrack.set_sensitive(True)
         self.btnIgnore.set_sensitive(True)
         self.btnBranch.set_sensitive(True)
         self.btnInit.set_sensitive(False)
@@ -40,61 +40,92 @@ class Base:
         
     def destroy(self, widget, data=None):
         gtk.main_quit()
+        
+    def push(self,remoteindex,i):
+        if remoteindex == 0:
+            for x in self.Repo.remotes:
+                x.push()
+            self.txtStatus.set_text('Pushed repo to all remotes')
+            print 'Pushed'
+        elif cboRemote.get_active() > 0:
+            self.Repo.remotes[remoteindex-1].push()
+            self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[cboRemote.get_active()-1].name)
+            print 'Pushed'
+        self.spnWorking.stop()
+        
+    def pull(self,remoteindex,i):
+        if cboRemote.get_active() >= 0:
+            self.Repo.remotes[remoteindex-1].pull()
+            self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[cboRemote.get_active()].name)
+            print 'Pulled'
+        self.spnWorking.stop()
 
     def btnPushEvent(self, widget):
         if len(self.Repo.remotes) != 0:
-            self.cboRemote = gtk.combo_box_new_text()
-            self.cboRemote.append_text("*ALL*")
+            cboRemote = gtk.combo_box_new_text()
+            cboRemote.append_text("*ALL*")
             for x in self.Repo.remotes:
-                self.cboRemote.append_text(x.name)
-            self.cboRemote.set_active(0)
-            self.cboRemote.show()
+                cboRemote.append_text(x.name)
+            cboRemote.set_active(0)
+            cboRemote.show()
             dialog = gtk.Dialog("Select Remote to Push to...", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-            dialog.vbox.pack_start(self.cboRemote)
+            dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
             if result == gtk.RESPONSE_ACCEPT:
-                if self.cboRemote.get_active() == 0:
-                    for x in self.Repo.remotes:
-                        x.push()
-                    self.txtStatus.set_text('Pushed repo to all remotes')
-                elif self.cboRemote.get_active() > 0:
-                    self.Repo.remotes[self.cboRemote.get_active()-1].push()
-                    self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[self.cboRemote.get_active()-1].name)
-            else:
-                dialog.hide()
+                self.spnWorking.start()
+                self.txtStatus.set_text('Pushing...')
+                thread.start_new_thread(self.push,(cboRemote.get_active(),0))
+            dialog.hide()
         else:
-            self.repo.remotes[0].push()
-            self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[0].name)
+            self.spnWorking.start()
+            thread.start_new_thread(self.push,(1,0))
         
 
     def btnPullEvent(self, widget):
         if len(self.Repo.remotes) != 0:
-            self.cboRemote = gtk.combo_box_new_text()
+            cboRemote = gtk.combo_box_new_text()
             for x in self.Repo.remotes:
-                self.cboRemote.append_text(x.name)
-            self.cboRemote.set_active(0)
-            self.cboRemote.show()
+                cboRemote.append_text(x.name)
+            cboRemote.set_active(0)
+            cboRemote.show()
             dialog = gtk.Dialog("Select Remote to Pull From...", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-            dialog.vbox.pack_start(self.cboRemote)
+            dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
             if result == gtk.RESPONSE_ACCEPT:
-                if self.cboRemote.get_active() >= 0:
-                    self.Repo.remotes[self.cboRemote.get_active()-1].push()
-                    self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[self.cboRemote.get_active()].name)
-            else:
-                dialog.hide()
+                self.spnWorking.start()
+                self.txtStatus.set_text('Pulling...')
+                thread.start_new_thread(self.pull,(cboRemote.get_active(),0))
+            dialog.hide()
         else:
-            self.repo.remotes[0].push()
-            self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[0].name)
+            self.spnWorking.start()
+            thread.start_new_thread(self.pull,(1,0))
 
     def btnAddEvent(self, widget):
-        print "btnAddEvent entered..."
+        self.Repo.index.add([self.instFileSystemInstance.gitpath])
+        print self.instFileSystemInstance.gitpath, ' added'
+        self.txtStatus.set_text(self.instFileSystemInstance.gitpath + ' added')
+        self.btnAdd.set_sensitive(False)
+        self.btnRemove.set_sensitive(True)
 
     def btnCommitEvent(self, widget):
-        print "btnCommitEvent entered..."
+        self.Repo.index.write()
+        edtMessage = gtk.Entry()
+        edtMessage.set_text('Commit Message')
+        edtMessage.show()
+        dialog = gtk.Dialog("Enter Commit Message", self.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        dialog.vbox.pack_start(edtMessage)
+        result = dialog.run()
+        if result == gtk.RESPONSE_ACCEPT:
+            self.Repo.index.commit(edtMessage.get_text())
+            print 'Commited'
+        dialog.hide()
 
-    def btnTrackEvent(self, widget):
-        print "btnTrackEvent entered..."
+    def btnRemoveEvent(self, widget):
+        self.Repo.index.remove([self.instFileSystemInstance.gitpath])
+        print self.instFileSystemInstance.gitpath, ' removed'
+        self.txtStatus.set_text(self.instFileSystemInstance.gitpath + ' removed')
+        self.btnAdd.set_sensitive(True)
+        self.btnRemove.set_sensitive(False)
 
     def btnOpenEvent(self, widget):
         print "btnOpenEvent entered..."
@@ -225,6 +256,9 @@ class Base:
 
 
     def __init__(self):
+        self.gitisactive = False
+        self.ftpisactive = False
+        
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_position(gtk.WIN_POS_CENTER)
         self.window.set_size_request(350,400)
@@ -257,10 +291,10 @@ class Base:
         self.btnCommit.set_sensitive(False)
         self.btnCommit.show()
 
-        self.btnTrack = gtk.Button("Track")
-        self.btnTrack.connect("clicked", self.btnTrackEvent)
-        self.btnTrack.set_sensitive(False)
-        self.btnTrack.show()
+        self.btnRemove = gtk.Button("Remove")
+        self.btnRemove.connect("clicked", self.btnRemoveEvent)
+        self.btnRemove.set_sensitive(False)
+        self.btnRemove.show()
 
         self.btnOpen = gtk.Button("Open")
         self.btnOpen.connect("clicked", self.btnOpenEvent)
@@ -304,6 +338,10 @@ class Base:
         self.btnSettings = gtk.Button("Settings")
         self.btnSettings.connect("clicked", self.btnSettingsEvent)
         self.btnSettings.show()
+        
+        self.spnWorking = gtk.Spinner()
+        self.spnWorking.num_steps = 12
+        self.spnWorking.show()
 
         self.txtStatus = gtk.Label(" { Status/Message Box } ")
         self.txtStatus.show()
@@ -351,10 +389,10 @@ class Base:
         self.table.attach(self.btnPull, 0, 1, 0, 1)
         self.table.attach(self.btnPush, 1, 2, 0, 1)
         self.table.attach(self.btnAdd, 2, 3, 0 ,1)
-        self.table.attach(self.btnCommit, 3, 4, 0, 1)
-        self.table.attach(self.btnTrack, 0, 1, 1, 2)
+        self.table.attach(self.btnIgnore, 3, 4, 0, 1)
+        self.table.attach(self.btnCommit, 0, 1, 1, 2)
         self.table.attach(self.btnUpload, 1, 2, 1, 2)
-        self.table.attach(self.btnIgnore, 2, 3, 1, 2)
+        self.table.attach(self.btnRemove, 2, 3, 1, 2)
         self.table.attach(self.btnBranch, 3, 4, 1, 2)
         self.table.attach(self.btnOpen, 0, 1, 2, 3)
         self.table.attach(self.btnSwitch, 1, 2, 2, 3)
@@ -364,9 +402,10 @@ class Base:
         self.table.attach(self.btnFtpSetup, 2, 4, 3, 4)
         self.table.show()
 
-        self.table2 = gtk.Table(1, 2, False)
+        self.table2 = gtk.Table(1, 3, False)
         self.table2.attach(self.btnSettings, 0, 1, 0, 1)
-        self.table2.attach(self.txtStatus, 1, 2, 0, 1)
+        self.table2.attach(self.spnWorking, 1, 2, 0, 1)
+        self.table2.attach(self.txtStatus, 2, 3, 0, 1)
         self.table2.show()
 
         self.vbox.pack_start(self.scrFileListPane, True, True, 0)

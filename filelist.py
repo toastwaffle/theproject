@@ -187,6 +187,7 @@ class FileList:
             self.treeview.append_column(self.tvcolumn[n])
 
         self.treeview.connect('row-activated', self.open_file)
+        self.treeview.connect('cursor-changed', self.change_cursor)
         self.treeview.set_model(self.listmodel)
         return
 
@@ -204,4 +205,25 @@ class FileList:
                 new_model = FileListModel(pathname,False,model.rootpath)
             treeview.set_model(new_model)
             self.globalclass.window.set_title("TheProject - " + os.path.abspath(pathname))
+        return
+   
+    def change_cursor(self, treeview):
+        model = treeview.get_model()
+        self.currpath =  model.get_pathname(treeview.get_cursor()[0])
+        workdir = self.globalclass.Repo.working_dir + '/'
+        self.gitpath = self.currpath.replace(workdir,'')
+        print self.currpath
+        if self.globalclass.gitisactive:
+            filestat = os.stat(self.currpath)
+            if stat.S_ISDIR(filestat.st_mode):
+                self.globalclass.btnAdd.set_sensitive(False)
+                self.globalclass.btnRemove.set_sensitive(False)
+            else:
+                print self.gitpath
+                if self.globalclass.Repo.index.entries.has_key((self.gitpath, 0)):
+                    self.globalclass.btnAdd.set_sensitive(False)
+                    self.globalclass.btnRemove.set_sensitive(True)
+                else:
+                    self.globalclass.btnAdd.set_sensitive(True)
+                    self.globalclass.btnRemove.set_sensitive(False)
         return
