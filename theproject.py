@@ -47,16 +47,16 @@ class Base:
                 x.push()
             self.txtStatus.set_text('Pushed repo to all remotes')
             print 'Pushed'
-        elif cboRemote.get_active() > 0:
+        elif remoteindex > 0:
             self.Repo.remotes[remoteindex-1].push()
-            self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[cboRemote.get_active()-1].name)
+            self.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[remoteindex-1].name)
             print 'Pushed'
         self.spnWorking.stop()
         
     def pull(self,remoteindex,i):
-        if cboRemote.get_active() >= 0:
-            self.Repo.remotes[remoteindex-1].pull()
-            self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[cboRemote.get_active()].name)
+        if remoteindex >= 0:
+            self.Repo.remotes[remoteindex].pull()
+            self.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[remoteindex].name)
             print 'Pulled'
         self.spnWorking.stop()
 
