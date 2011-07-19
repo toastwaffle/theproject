@@ -61,7 +61,7 @@ class Base:
         self.spnWorking.stop()
 
     def btnPushEvent(self, widget):
-        if len(self.Repo.remotes) != 0:
+        if len(self.Repo.remotes) != 1:
             cboRemote = gtk.combo_box_new_text()
             cboRemote.append_text("*ALL*")
             for x in self.Repo.remotes:
@@ -82,7 +82,7 @@ class Base:
         
 
     def btnPullEvent(self, widget):
-        if len(self.Repo.remotes) != 0:
+        if len(self.Repo.remotes) != 1:
             cboRemote = gtk.combo_box_new_text()
             for x in self.Repo.remotes:
                 cboRemote.append_text(x.name)
@@ -98,7 +98,7 @@ class Base:
             dialog.hide()
         else:
             self.spnWorking.start()
-            thread.start_new_thread(self.pull,(1,0))
+            thread.start_new_thread(self.pull,(0,0))
 
     def btnAddEvent(self, widget):
         self.Repo.index.add([self.instFileSystemInstance.gitpath])
