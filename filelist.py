@@ -167,7 +167,9 @@ class FileList:
  
         # create the TreeView
         self.treeview = gtk.TreeView()
- 
+
+        treeselection = self.treeview.get_selection()
+        treeselection.set_mode(gtk.SELECTION_SINGLE)
         # create the TreeViewColumns to display the data
         column_names = self.listmodel.get_column_names()
         self.tvcolumn = [None] * len(column_names)
@@ -210,10 +212,10 @@ class FileList:
     def change_cursor(self, treeview):
         model = treeview.get_model()
         self.currpath =  model.get_pathname(treeview.get_cursor()[0])
-        workdir = self.globalclass.Repo.working_dir + '/'
-        self.gitpath = self.currpath.replace(workdir,'')
         print self.currpath
         if self.globalclass.gitisactive:
+            workdir = self.globalclass.Repo.working_dir + '/'
+            self.gitpath = self.currpath.replace(workdir,'')
             filestat = os.stat(self.currpath)
             if stat.S_ISDIR(filestat.st_mode):
                 self.globalclass.btnAdd.set_sensitive(False)

@@ -16,6 +16,7 @@ import git
 import filelist
 import urllib2
 import thread
+import webbrowser
 
 class Base:
     def git_active(self):
@@ -31,7 +32,6 @@ class Base:
             self.table.remove(self.btnFtpSetup)
             self.table.attach(self.btnFtpSetup, 0, 4, 3, 4)
             
-
     def ftp_active(self):
         self.btnUpload.set_sensitive(True)
         self.btnFtpSetup.hide()
@@ -129,10 +129,14 @@ class Base:
         self.btnRemove.set_sensitive(False)
 
     def btnOpenEvent(self, widget):
-        print "btnOpenEvent entered..."
+        webbrowser.open(self.instFileSystemInstance.currpath)
 
     def btnIgnoreEvent(self, widget):
-        print "btnIgnoreEvent entered..."
+        path = self.instFileSystemInstance.gitpath
+        f = open(repos+"/.gitignore",'a+')
+        f.write(path+"\n")
+        f.close()
+        self.Repo.index.add('.gitignore')
 
     def btnBranchEvent(self, widget):
         print "btnBranchEvent entered..."
