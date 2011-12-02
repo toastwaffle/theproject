@@ -51,11 +51,93 @@ class FileListModel(gtk.GenericTreeModel):
         "X          X"
     ]
     filepb = gtk.gdk.pixbuf_new_from_xpm_data(filexpm)
-    column_types = (gtk.gdk.Pixbuf, str, str)
-    column_names = ['Name', 'Last Changed']
 
-    def __init__(self, dname=None, root=False, rootpath=None):
+    newxpm = [
+        "12 12 5 1",
+        "  c #000000",
+        ". c #ffff04",
+        "X c #b2c0dc",
+        "g c green",
+        "w c white",
+        "X     gg  gg",
+        "X ....gg  gg",
+        "X ....      ",
+        "X .  .      ",
+        "X ....gg  gg",
+        "X .   gg  gg",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X          X"
+    ]
+    newpb = gtk.gdk.pixbuf_new_from_xpm_data(newxpm)
+
+    renamedxpm = [
+        "12 12 4 1",
+        "  c #000000",
+        ". c #ffff04",
+        "X c #b2c0dc",
+        "o c #ff6600",
+        "X     oooooo",
+        "X ....oooooo",
+        "X ....oooooo",
+        "X .   oooooo",
+        "X ....oooooo",
+        "X .   oooooo",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X          X"
+    ]
+    renamedpb = gtk.gdk.pixbuf_new_from_xpm_data(renamedxpm)
+
+    changedxpm = [
+        "12 12 5 1",
+        "  c #000000",
+        ". c #ffff04",
+        "X c #b2c0dc",
+        "g c #00ff00",
+        "h c #33ff00",
+        "X     ghghgh",
+        "X ....hghghg",
+        "X ....ghghgh",
+        "X .   hghghg",
+        "X ....ghghgh",
+        "X .   hghghg",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X .     .. X",
+        "X ........ X",
+        "X          X"
+    ]
+    changedpb = gtk.gdk.pixbuf_new_from_xpm_data(changedxpm)
+    column_types = (gtk.gdk.Pixbuf, str, str, str)
+    column_names = ['Name', 'Status', 'Last Changed']
+
+    def __init__(self,globalclass, dname=None, root=False, rootpath=None):
         gtk.GenericTreeModel.__init__(self)
+        self.globalclass = globalclass
+        self.changed = []
+        self.renamed = []
+        self.newfiles = []
+        if self.globalclass.gitisactive:
+            for x in globalclass.Repo.index.diff(None):
+                fullpath = globalclass.Repo.working_dir+"/"+x.a_blob.path
+                if x.renamed:
+                    fullpath = globalclass.Repo.working_dir+"/"+x.renamed_to
+                    self.renamed.append(fullpath)
+                elif x.new_file:
+                    self.newfiles.append(fullpath)
+                else:
+                    self.changed.append(fullpath)
+            for x in globalclass.Repo.untracked_files:
+                fullpath = globalclass.Repo.working_dir+"/"+x
+                self.newfiles.append(fullpath)
         if not dname:
             self.dirname = os.path.expanduser('~')
         else:
@@ -123,10 +205,27 @@ class FileListModel(gtk.GenericTreeModel):
         if column is 0:
             if stat.S_ISDIR(mode):
                 return self.folderpb
+            elif fname in self.changed:
+                return self.changedpb
+            elif fname in self.newfiles:
+                return self.newpb
+            elif fname in self.renamed:
+                return self.renamedpb
             else:
                 return self.filepb
         elif column is 1:
             return rowref
+        elif column is 2:
+            if stat.S_ISDIR(mode):
+                return ""
+            elif fname in self.changed:
+                return "File Has Changed"
+            elif fname in self.newfiles:
+                return "New File"
+            elif fname in self.renamed:
+                return "Renamed"
+            else:
+                return "Unchanged"
         return time.ctime(filestat.st_mtime)
 
     def on_iter_next(self, rowref):
@@ -163,7 +262,7 @@ class FileListModel(gtk.GenericTreeModel):
 class FileList:
     def __init__(self,dirname,globalclass):
         self.globalclass = globalclass
-        self.listmodel = FileListModel(dirname,True)
+        self.listmodel = FileListModel(globalclass,dirname,True,None)
  
         # create the TreeView
         self.treeview = gtk.TreeView()
@@ -202,9 +301,9 @@ class FileList:
             else:
                 self.globalclass.btnInit.set_sensitive(True)                
             if os.path.abspath(pathname) == os.path.abspath(model.rootpath):
-                new_model = FileListModel(pathname,True)
+                new_model = FileListModel(self.globalclass,pathname,True,None)
             else:
-                new_model = FileListModel(pathname,False,model.rootpath)
+                new_model = FileListModel(self.globalclass,pathname,False,model.rootpath)
             treeview.set_model(new_model)
             self.globalclass.window.set_title("TheProject - " + os.path.abspath(pathname))
         return

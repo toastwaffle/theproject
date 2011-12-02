@@ -163,13 +163,14 @@ class Base:
                 self.Repo = git.Repo.init(dirname)
                 self.txtStatus.set_text('Initialised Repo at:\n' + repos)
                 self.window.set_title("TheProject - " + repos)
-            new_model = filelist.FileListModel(repos,True)
+            self.git_active()
+            new_model = filelist.FileListModel(self,repos,True)
             self.trvFileSystem.set_model(new_model)
             print repos, 'Selected'
-            self.git_active()
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected, repository not changed'
         dialog.hide()
+        #boo
 
     def btnCloneEvent(self, widget):
         self.edtClone = gtk.Entry()
@@ -201,7 +202,7 @@ class Base:
                 print 'Repo Cloned to ',self.edtLocation.get_text()
                 self.txtStatus.set_text('Cloned Repo to:\n' + self.edtLocation.get_text())
                 self.git_active()
-                new_model = filelist.FileListModel(os.path.abspath(self.edtLocation.get_text()),True)
+                new_model = filelist.FileListModel(self,os.path.abspath(self.edtLocation.get_text()),True)
                 self.trvFileSystem.set_model(new_model)
             except GitCommandError:
                 print 'Couldn\'t Clone Repo, Repo or path invalid'
@@ -232,7 +233,7 @@ class Base:
         print 'Git Repo initialised at', dirname
         self.txtStatus.set_text('Repo initialised at '+dirname)
         self.git_active()
-        new_model = filelist.FileListModel(os.path.abspath(dirname),True)
+        new_model = filelist.FileListModel(self,os.path.abspath(dirname),True)
         self.trvFileSystem.set_model(new_model)
 
     def btnGitSetupEvent(self, widget):
