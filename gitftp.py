@@ -63,9 +63,9 @@ class GitFTP:
                 self.parent.txtStatus.set_text('Pushed repo to all remotes')
             print 'Pushed'
         elif remoteindex >= 0:
-            self.Repo.remotes[remoteindex-1].push()
+            self.Repo.remotes[remoteindex].push()
             with gtk.gdk.lock:
-                self.parent.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[remoteindex-1].name)
+                self.parent.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[remoteindex].name)
             print 'Pushed'
         with gtk.gdk.lock:
             self.parent.spnWorking.stop()
