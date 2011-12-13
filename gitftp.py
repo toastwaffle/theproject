@@ -3,6 +3,7 @@
 #Created by toastwaffle && starcube
 #github.com/toastwaffle && github.com/starcube
 
+import gobject
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -14,8 +15,22 @@ import smmap
 import async
 import gitdb
 import git
-import thread
+import threading
 import webbrowser
+
+class WorkerThread(threading.Thread):
+    def __init__(self,function,parent,*args):
+        threading.Thread.__init__(self)
+        self.function = function
+        self.parent = parent
+        
+    def run(self):
+        self.parent.still_working = True
+        self.function(*args)
+        self.parent.still_working = False
+        
+    def stop(self):
+        self = None
 
 class GitFTP:
     def git_active(self):
@@ -38,23 +53,30 @@ class GitFTP:
             self.table.attach(self.btnGitSetup, 0, 4, 3, 4)
    
     def push(self,remoteindex,i):
-        if remoteindex == 0:
+        if remoteindex == -1:
             for x in self.Repo.remotes:
                 x.push()
-            self.parent.txtStatus.set_text('Pushed repo to all remotes')
+            with gtk.gdk.lock:
+                self.parent.txtStatus.set_text('Pushed repo to all remotes')
             print 'Pushed'
-        elif remoteindex > 0:
+        elif remoteindex >= 0:
             self.Repo.remotes[remoteindex-1].push()
-            self.parent.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[remoteindex-1].name)
+            with gtk.gdk.lock:
+                self.parent.txtStatus.set_text('Pushed repo to remote: ' + self.Repo.remotes[remoteindex-1].name)
             print 'Pushed'
-        self.parent.spnWorking.stop()
+        with gtk.gdk.lock:
+            self.parent.spnWorking.stop()
+            self.parent.spnWorking.hide()
         
     def pull(self,remoteindex,i):
         if remoteindex >= 0:
             self.Repo.remotes[remoteindex].pull()
-            self.parent.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[remoteindex].name)
+            with gtk.gdk.lock:
+                self.parent.txtStatus.set_text('Pulled repo from remote: ' + self.Repo.remotes[remoteindex].name)
             print 'Pulled'
-        self.parent.spnWorking.stop()
+        with gtk.gdk.lock:
+            self.parent.spnWorking.stop()
+            self.parent.spnWorking.hide()
 
     def btnPushEvent(self, widget):
         if len(self.Repo.remotes) != 1:
@@ -68,13 +90,17 @@ class GitFTP:
             dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
             if result == gtk.RESPONSE_ACCEPT:
+                self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pushing...')
-                thread.start_new_thread(self.push,(cboRemote.get_active(),0))
+                WT = WorkerThread(self.push,self,cboRemote.get_active(),0)
+                WT.start()
             dialog.hide()
         else:
+            self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            thread.start_new_thread(self.push,(1,0))
+            WT = WorkerThread(self.push,self,-1,0)
+            WT.start()
         
 
     def btnPullEvent(self, widget):
@@ -88,13 +114,17 @@ class GitFTP:
             dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
             if result == gtk.RESPONSE_ACCEPT:
+                self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pulling...')
-                thread.start_new_thread(self.pull,(cboRemote.get_active(),0))
+                WT = WorkerThread(self.pull,self,cboRemote.get_active(),0)
+                WT.start()
             dialog.hide()
         else:
+            self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            thread.start_new_thread(self.pull,(0,0))
+            WT = WorkerThread(self.pull,self,0,0)
+            WT.start()
 
     def btnAddEvent(self, widget):
         self.Repo.index.add([self.instFileSystemInstance.gitpath])
@@ -340,6 +370,7 @@ class GitFTP:
         print "btnFtpSetupEvent entered..."
 
     def __init__(self,parent):
+    
         self.parent = parent
         self.gitisactive = False
         self.ftpisactive = False
@@ -436,7 +467,7 @@ class GitFTP:
 
         self.vbox = gtk.VBox(False, 3)        
         self.vbox.pack_start(self.scrFileListPane, True, True, 0)
-        self.vbox.pack_end(self.table, True, False, 0)
+        self.vbox.pack_end(self.table, False, False, 0)
         self.vbox.show()
         
         self.page = gtk.Frame()

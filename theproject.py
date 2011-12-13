@@ -12,6 +12,7 @@ sys.path.append(os.getcwd())
 import gitftp
 import cms
 import downloader
+import gobject
 
 class Base:        
     def destroy(self, widget, data=None):
@@ -21,6 +22,8 @@ class Base:
         print "btnSettingsEvent entered..."
 
     def __init__(self):
+        gobject.threads_init()
+        gtk.gdk.threads_init()
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_position(gtk.WIN_POS_CENTER)
         self.window.set_size_request(350,400)
@@ -39,7 +42,6 @@ class Base:
         
         self.spnWorking = gtk.Spinner()
         self.spnWorking.num_steps = 12
-        self.spnWorking.show()
 
         self.txtStatus = gtk.Label("   ")
         self.txtStatus.show()
@@ -72,7 +74,9 @@ class Base:
         self.window.add(self.vbox)
 
     def main(self):
+        gtk.gdk.threads_enter()
         gtk.main()
+        gtk.gdk.threads_leave()
 
 if __name__ == "__main__":
     base = Base()
