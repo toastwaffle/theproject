@@ -305,7 +305,7 @@ class FileList:
             else:
                 new_model = FileListModel(self.globalclass,pathname,False,model.rootpath)
             treeview.set_model(new_model)
-            self.globalclass.window.set_title("TheProject - " + os.path.abspath(pathname))
+            self.globalclass.parent.window.set_title("TheProject - " + os.path.abspath(pathname))
         return
    
     def change_cursor(self, treeview):

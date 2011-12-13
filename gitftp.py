@@ -19,12 +19,12 @@ import threading
 import webbrowser
 
 class WorkerThread(threading.Thread):
-    def __init__(self,function,parent,*args):
+    def __init__(self,function,parent):
         threading.Thread.__init__(self)
         self.function = function
         self.parent = parent
         
-    def run(self):
+    def run(self,*args):
         self.parent.still_working = True
         self.function(*args)
         self.parent.still_working = False
@@ -93,14 +93,14 @@ class GitFTP:
                 self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pushing...')
-                WT = WorkerThread(self.push,self,cboRemote.get_active(),0)
-                WT.start()
+                WT = WorkerThread(self.push,self)
+                WT.start(cboRemote.get_active()-1,0)
             dialog.hide()
         else:
             self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            WT = WorkerThread(self.push,self,-1,0)
-            WT.start()
+            WT = WorkerThread(self.push,self)
+            WT.start(0,0)
         
 
     def btnPullEvent(self, widget):
@@ -117,14 +117,14 @@ class GitFTP:
                 self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pulling...')
-                WT = WorkerThread(self.pull,self,cboRemote.get_active(),0)
-                WT.start()
+                WT = WorkerThread(self.pull,self)
+                WT.start(cboRemote.get_active(),0)
             dialog.hide()
         else:
             self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            WT = WorkerThread(self.pull,self,0,0)
-            WT.start()
+            WT = WorkerThread(self.pull,self)
+            WT.start(0,0)
 
     def btnAddEvent(self, widget):
         self.Repo.index.add([self.instFileSystemInstance.gitpath])
