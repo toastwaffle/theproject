@@ -19,14 +19,15 @@ import threading
 import webbrowser
 
 class WorkerThread(threading.Thread):
-    def __init__(self,function,parent):
+    def __init__(self,function,parent,args):
         threading.Thread.__init__(self)
         self.function = function
         self.parent = parent
+        self.args = args
         
-    def run(self,*args):
+    def run(self):
         self.parent.still_working = True
-        self.function(*args)
+        self.function(args)
         self.parent.still_working = False
         
     def stop(self):
@@ -52,7 +53,9 @@ class GitFTP:
         if self.btnGitSetup.get_visible:
             self.table.attach(self.btnGitSetup, 0, 4, 3, 4)
    
-    def push(self,remoteindex,i):
+    def push(self,args):
+        remoteindex = args[0]
+        i = args[1]
         if remoteindex == -1:
             for x in self.Repo.remotes:
                 x.push()
@@ -68,7 +71,9 @@ class GitFTP:
             self.parent.spnWorking.stop()
             self.parent.spnWorking.hide()
         
-    def pull(self,remoteindex,i):
+    def pull(self,args):
+        remoteindex = args[0]
+        i = args[1]
         if remoteindex >= 0:
             self.Repo.remotes[remoteindex].pull()
             with gtk.gdk.lock:
@@ -89,18 +94,18 @@ class GitFTP:
             dialog = gtk.Dialog("Select Remote to Push to...", self.parent.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
             dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
+            dialog.hide()
             if result == gtk.RESPONSE_ACCEPT:
                 self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pushing...')
-                WT = WorkerThread(self.push,self)
-                WT.start(cboRemote.get_active()-1,0)
-            dialog.hide()
+                WT = WorkerThread(self.push,self,(cboRemote.get_active()-1,0))
+                WT.start()
         else:
             self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            WT = WorkerThread(self.push,self)
-            WT.start(0,0)
+            WT = WorkerThread(self.push,self,(0,0))
+            WT.start()
         
 
     def btnPullEvent(self, widget):
@@ -113,18 +118,18 @@ class GitFTP:
             dialog = gtk.Dialog("Select Remote to Pull From...", self.parent.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
             dialog.vbox.pack_start(cboRemote)
             result = dialog.run()
+            dialog.hide()
             if result == gtk.RESPONSE_ACCEPT:
                 self.parent.spnWorking.show()
                 self.parent.spnWorking.start()
                 self.parent.txtStatus.set_text('Pulling...')
-                WT = WorkerThread(self.pull,self)
-                WT.start(cboRemote.get_active(),0)
-            dialog.hide()
+                WT = WorkerThread(self.pull,self,(cboRemote.get_active(),0))
+                WT.start()
         else:
             self.parent.spnWorking.show()
             self.parent.spnWorking.start()
-            WT = WorkerThread(self.pull,self)
-            WT.start(0,0)
+            WT = WorkerThread(self.pull,self,(0,0))
+            WT.start()
 
     def btnAddEvent(self, widget):
         self.Repo.index.add([self.instFileSystemInstance.gitpath])
@@ -142,10 +147,10 @@ class GitFTP:
         dialog = gtk.Dialog("Enter Commit Message", self.parent.window, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         dialog.vbox.pack_start(edtMessage)
         result = dialog.run()
+        dialog.hide()
         if result == gtk.RESPONSE_ACCEPT:
             self.Repo.index.commit(edtMessage.get_text())
-            print 'Commited'
-        dialog.hide()
+            print 'committed'
 
     def btnRemoveEvent(self, widget):
         self.Repo.index.remove([self.instFileSystemInstance.gitpath])
@@ -280,6 +285,7 @@ class GitFTP:
         filter.add_pattern("*")
         dialog.add_filter(filter)
         response = dialog.run()
+        dialog.hide()
         if response == gtk.RESPONSE_OK:
             repos = dialog.get_filename()
             if os.path.exists(repos+'/.git'):
@@ -297,7 +303,6 @@ class GitFTP:
             print repos, 'Selected'
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected, repository not changed'
-        dialog.hide()
 
     def btnCloneEvent(self, widget):
         self.edtClone = gtk.Entry()
@@ -319,6 +324,7 @@ class GitFTP:
         dialog.vbox.pack_end(self.edtLocation)
         dialog.vbox.pack_end(self.lblLocation)
         result = dialog.run()
+        dialog.hide()
         if result == gtk.RESPONSE_ACCEPT:
             if not os.path.exists(self.edtLocation.get_text()):
                 os.makedirs(self.edtLocation.get_text())
@@ -334,9 +340,7 @@ class GitFTP:
             except GitCommandError:
                 print 'Couldn\'t Clone Repo, Repo or path invalid'
                 self.parent.txtStatus.set_text('Repo or path invalid')
-                dialog.run()
-        else:
-            dialog.hide()
+                self.btnCloneEvent(None)
         
     def btnBrowseEvent(self, widget):
         dialog = gtk.FileChooserDialog("Select Folder to clone to...", None, gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
@@ -346,12 +350,12 @@ class GitFTP:
         filter.add_pattern("*")
         dialog.add_filter(filter)
         response = dialog.run()
+        dialog.hide()
         if response == gtk.RESPONSE_OK:
             self.edtLocation.set_text(dialog.get_filename())
             print 'Location changed to ', dialog.get_filename()
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected, location not changed'
-        dialog.hide()
 
     def btnInitEvent(self, widget):
         model = self.trvFileSystem.get_model()
@@ -370,7 +374,6 @@ class GitFTP:
         print "btnFtpSetupEvent entered..."
 
     def __init__(self,parent):
-    
         self.parent = parent
         self.gitisactive = False
         self.ftpisactive = False
