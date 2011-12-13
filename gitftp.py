@@ -27,7 +27,7 @@ class WorkerThread(threading.Thread):
         
     def run(self):
         self.parent.still_working = True
-        self.function(args)
+        self.function(self.args)
         self.parent.still_working = False
         
     def stop(self):
